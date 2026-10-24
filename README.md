@@ -1,36 +1,27 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Graph Commerce
 
-## Getting Started
+Full-stack e-commerce app built with **Next.js 16**, **TypeScript** and a **graph database** (CognoDB, queried with Cypher over Bolt).
 
-First, run the development server:
+> Work in progress: features are being added incrementally.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## Tech stack
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- Next.js 16 (App Router), React, TypeScript, Tailwind CSS
+- CognoDB (graph DB) via `neo4j-driver`
+- TanStack React Query, Zustand
+- bcrypt + JWT (httpOnly cookies) for authentication
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Getting started
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. `npm install`
+2. Copy `.env.example` to `.env.local` and fill in your values
+3. `npm run dev`
 
-## Learn More
+## Roadmap
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- [ ] Database layer
+- [ ] Authentication and route protection
+- [ ] Product catalog, filters and quick-view modal
+- [ ] Cart and checkout
+- [ ] Admin dashboard
+- [ ] Sales analytics and caching
