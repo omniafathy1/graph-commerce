@@ -20,7 +20,7 @@ Full-stack e-commerce app built with **Next.js 16**, **TypeScript** and a **grap
 ## Roadmap
 
 - [x] Database layer
-- [ ] Authentication and route protection
+- [x] Authentication and route protection
 - [ ] Product catalog, filters and quick-view modal
 - [ ] Cart and checkout
 - [ ] Admin dashboard
