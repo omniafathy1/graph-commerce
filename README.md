@@ -22,6 +22,7 @@ Full-stack e-commerce app built with **Next.js 16**, **TypeScript** and a **grap
 - [x] Database layer
 - [x] Authentication and route protection
 - [x] UI foundations (React Query, Zustand toasts, header)
+- [x] Product catalog, filters and quick-view modal
 - [ ] Cart and checkout
 - [ ] Admin dashboard
 - [ ] Sales analytics and caching
