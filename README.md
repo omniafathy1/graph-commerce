@@ -25,4 +25,4 @@ Full-stack e-commerce app built with **Next.js 16**, **TypeScript** and a **grap
 - [x] Product catalog, filters and quick-view modal
 - [x] Cart and checkout
 - [x] Admin dashboard
-- [ ] Sales analytics and caching
+- [x] Sales analytics and caching
