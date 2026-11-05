@@ -1,4 +1,4 @@
-import neo4j, { Driver } from "neo4j-driver";
+import neo4j, { Driver, ManagedTransaction } from "neo4j-driver";
 
 let driver: Driver;
 
@@ -28,4 +28,14 @@ export async function runQuery(cypher: string, params: Record<string, any> = {})
 export function toNum(value: unknown): number {
   if (value === null || value === undefined) return 0;
   return neo4j.isInt(value) ? value.toNumber() : Number(value);
+}
+
+// db.ts
+export async function runInTransaction<T>(work: (tx: ManagedTransaction) => Promise<T>) {
+  const session = getDriver().session();
+  try {
+    return await session.executeWrite(work);
+  } finally {
+    await session.close();
+  }
 }
