@@ -65,6 +65,11 @@ A full-stack e-commerce app built with **Next.js 16**, **TypeScript** and a **gr
    ```
 
    ```cypher
+   CREATE CONSTRAINT order_idempotency_unique IF NOT EXISTS
+   FOR (o:Order) REQUIRE o.idempotencyKey IS UNIQUE
+   ```
+
+   ```cypher
    CREATE (:Category {name: 'Electronics'}), (:Category {name: 'Clothing'})
    ```
 
@@ -100,6 +105,7 @@ A full-stack e-commerce app built with **Next.js 16**, **TypeScript** and a **gr
 - **Authorization in every Server Action:** actions are public endpoints, so each one checks the role itself and the proxy is only a coarse gate.
 - **Server state vs UI state:** React Query owns data from the server, Zustand owns UI-only state such as toasts.
 - **Atomic checkout:** creating the order and emptying the cart run in one transaction, so a failure never leaves an order behind with a full cart.
+- **Idempotent checkout:** each purchase attempt carries an `Idempotency-Key` header, scoped to the customer and backed by a unique constraint, so retries and double submits return the same order instead of creating a second one.
 
 ## Known limitations and next steps
 
@@ -108,3 +114,4 @@ A full-stack e-commerce app built with **Next.js 16**, **TypeScript** and a **gr
 - No rate limiting on login and no automated tests yet.
 - `elementId()` is used in URLs; a UUID property would be more stable.
 - Categories and related products are managed with Cypher, not from the UI.
+- Checkouts from two different tabs use different keys; a per-customer lock would close that gap.

@@ -2,19 +2,24 @@
 
 import { useRouter } from "next/navigation";
 import { useCheckout } from "../../../hooks/useCheckout";
+import { useRef } from "react";
 
 export default function CheckoutButton() {
   const router = useRouter();
   const { mutate, isPending, error } = useCheckout();
 
+    const keyRef = useRef<string | null>(null);
+
   function handleCheckout() {
-    mutate(undefined, {
+    if (!keyRef.current) keyRef.current = crypto.randomUUID();
+
+    mutate(keyRef.current, {
       onSuccess: (data) => {
+        keyRef.current = null;
         router.push(`/order-confirmation?orderId=${data.orderId}`);
       },
     });
   }
-
   return (
     <div>
       {error && (
