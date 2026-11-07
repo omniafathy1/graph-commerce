@@ -1,6 +1,5 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { runQuery } from "../../lib/db";
 import { getAdminUser } from "../../lib/auth";
@@ -129,21 +128,23 @@ updateTag("stats");   // الاسم والتصنيف بيظهروا في الإ�
 redirect("/admin");
 }
 
-export async function toggleProductAction(formData: FormData): Promise<void> {
+export async function setProductActiveAction(formData: FormData): Promise<void> {
   if (!(await getAdminUser())) throw new Error("غير مسموح");
 
   const id = String(formData.get("id") ?? "");
-  if (!id) return;
+  const active = String(formData.get("active") ?? "");
+
+  // مبنثقش في الفورم: القيمة لازم تكون true أو false بالظبط
+  if (!id || (active !== "true" && active !== "false")) return;
 
   await runQuery(
     `MATCH (p:Product) WHERE elementId(p) = $id
-     SET p.active = NOT coalesce(p.active, true)`,
-    { id }
+     SET p.active = $active`,
+    { id, active: active === "true" }
   );
 
-updateTag("products");
-updateTag(`product-${id}`);
-updateTag("stats");
+  updateTag("products");
+  updateTag(`product-${id}`);
 }
 
 function formData2values(d: {

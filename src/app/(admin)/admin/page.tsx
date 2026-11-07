@@ -2,8 +2,7 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { runQuery } from "../../../lib/db";
 import { requireAdmin } from "../../../lib/auth";
-import { toggleProductAction } from "../../actions/product";
-
+import { setProductActiveAction } from "../../actions/product";
 async function getAllProducts() {
   const records = await runQuery(`
     MATCH (p:Product)-[:BELONGS_TO]->(c:Category)
@@ -64,8 +63,9 @@ async function AdminProductsContent() {
                 <Link href={`/admin/${p.id}/edit`} className="text-blue-600 underline">
                     تعديل
                 </Link>
-                <form action={toggleProductAction}>
+                <form action={setProductActiveAction}>
                     <input type="hidden" name="id" value={p.id} />
+                    <input type="hidden" name="active" value={String(!p.active)} />
                     <button className="text-blue-600 underline">
                     {p.active ? "إخفاء" : "إظهار"}
                     </button>

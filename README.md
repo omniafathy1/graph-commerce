@@ -106,6 +106,7 @@ A full-stack e-commerce app built with **Next.js 16**, **TypeScript** and a **gr
 - **Server state vs UI state:** React Query owns data from the server, Zustand owns UI-only state such as toasts.
 - **Atomic checkout:** creating the order and emptying the cart run in one transaction, so a failure never leaves an order behind with a full cart.
 - **Idempotent checkout:** each purchase attempt carries an `Idempotency-Key` header, scoped to the customer and backed by a unique constraint, so retries and double submits return the same order instead of creating a second one.
+- **Intent-based admin actions:** hiding or showing a product sends the desired state instead of flipping the current one, so double clicks and stale pages cannot undo each other.
 
 ## Known limitations and next steps
 
