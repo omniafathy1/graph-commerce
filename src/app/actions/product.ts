@@ -5,6 +5,9 @@ import { runQuery } from "../../lib/db";
 import { getAdminUser } from "../../lib/auth";
 import { updateTag } from "next/cache";
 
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 export type ProductFormState =
   | { error?: string; values?: Record<string, string> }
   | undefined;
@@ -52,20 +55,25 @@ export async function createProductAction(
   if (!parsed.ok) return { error: parsed.error, values: parsed.values };
   const { name, description, category, price } = parsed.data;
 
+  const key = String(formData.get("idempotencyKey") ?? "");
+  if (!UUID_RE.test(key)) {
+    return { error: "طلب غير صالح", values: formData2values(parsed.data) };
+  }
+
   try {
+    // MERGE: لو المنتج بالمفتاح ده موجود، متعملش واحد جديد
     const records = await runQuery(
       `
       MATCH (c:Category {name: $category})
-      CREATE (p:Product {
-        name: $name,
-        description: $description,
-        price: toInteger($price),
-        active: true
-      })
-      CREATE (p)-[:BELONGS_TO]->(c)
+      MERGE (p:Product {idempotencyKey: $key})
+      ON CREATE SET p.name = $name,
+                    p.description = $description,
+                    p.price = toInteger($price),
+                    p.active = true
+      MERGE (p)-[:BELONGS_TO]->(c)
       RETURN elementId(p) AS id
       `,
-      { category, name, description, price }
+      { category, name, description, price, key }
     );
 
     if (records.length === 0) {
@@ -75,9 +83,8 @@ export async function createProductAction(
     return { error: "حصل خطأ، حاول تاني", values: formData2values(parsed.data) };
   }
 
-// createProductAction
-updateTag("products");
-redirect("/admin");
+  updateTag("products");
+  redirect("/admin");
 }
 
 // الـ id أول argument لأنه جاي من .bind(null, id)

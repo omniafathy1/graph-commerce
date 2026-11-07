@@ -68,6 +68,11 @@ A full-stack e-commerce app built with **Next.js 16**, **TypeScript** and a **gr
    CREATE CONSTRAINT order_idempotency_unique IF NOT EXISTS
    FOR (o:Order) REQUIRE o.idempotencyKey IS UNIQUE
    ```
+   
+   ```cypher
+   CREATE CONSTRAINT product_idempotency_unique IF NOT EXISTS
+   FOR (p:Product) REQUIRE p.idempotencyKey IS UNIQUE
+   ```
 
    ```cypher
    CREATE (:Category {name: 'Electronics'}), (:Category {name: 'Clothing'})
@@ -105,7 +110,7 @@ A full-stack e-commerce app built with **Next.js 16**, **TypeScript** and a **gr
 - **Authorization in every Server Action:** actions are public endpoints, so each one checks the role itself and the proxy is only a coarse gate.
 - **Server state vs UI state:** React Query owns data from the server, Zustand owns UI-only state such as toasts.
 - **Atomic checkout:** creating the order and emptying the cart run in one transaction, so a failure never leaves an order behind with a full cart.
-- **Idempotent checkout:** each purchase attempt carries an `Idempotency-Key` header, scoped to the customer and backed by a unique constraint, so retries and double submits return the same order instead of creating a second one.
+- **Idempotent writes:** checkout and product creation carry a client-generated idempotency key backed by a unique constraint, so retries and double submits return the existing record instead of creating a duplicate.
 - **Intent-based admin actions:** hiding or showing a product sends the desired state instead of flipping the current one, so double clicks and stale pages cannot undo each other.
 
 ## Known limitations and next steps

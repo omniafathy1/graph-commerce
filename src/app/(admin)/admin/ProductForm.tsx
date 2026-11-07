@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState ,useState} from "react";
 import { ProductFormState } from "../../actions/product";
 
 type Props = {
@@ -26,9 +26,11 @@ export default function ProductForm({
 }: Props) {
   const [state, formAction, pending] = useActionState(action, undefined);
   const v = state?.values;
+const [idempotencyKey] = useState(() => crypto.randomUUID());
 
   return (
     <form action={formAction} className="space-y-4 max-w-md">
+      <input type="hidden" name="idempotencyKey" value={idempotencyKey} />
       <input
         name="name"
         defaultValue={v?.name ?? initial?.name}
