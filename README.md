@@ -7,9 +7,9 @@ A full-stack e-commerce app built with **Next.js 16**, **TypeScript** and a **gr
 ## Features
 
 - **Catalog:** category filters driven by the URL, product details, related products from graph relationships, and a quick-view modal (parallel + intercepting routes).
-- **Cart and checkout:** per-user cart stored in the database, optimistic updates with React Query, toast notifications with Zustand, and checkout that creates an order and snapshots unit prices.
+- **Cart and checkout:** per-user cart stored in the database, optimistic updates with React Query, toast notifications with Zustand, and an atomic, idempotent checkout that creates the order and snapshots unit prices.
 - **Authentication:** signup, login and logout with bcrypt-hashed passwords and a signed JWT in an httpOnly cookie. Private routes are protected in `proxy.ts`.
-- **Admin dashboard:** role-based authorization (the role is read from the database, not from the token) to add, edit and hide products, plus sales analytics (totals, top products, revenue by category).
+- **Admin dashboard:** role-based authorization (the role is read from the database, not from the token) to add, edit and hide products with idempotent writes and optimistic locking, plus sales analytics (totals, top products, revenue by category).
 - **Performance:** Next.js Cache Components (`use cache`, `cacheTag`, `updateTag`), Suspense streaming, and loading, error and not-found boundaries.
 
 <p>
@@ -68,7 +68,7 @@ A full-stack e-commerce app built with **Next.js 16**, **TypeScript** and a **gr
    CREATE CONSTRAINT order_idempotency_unique IF NOT EXISTS
    FOR (o:Order) REQUIRE o.idempotencyKey IS UNIQUE
    ```
-   
+
    ```cypher
    CREATE CONSTRAINT product_idempotency_unique IF NOT EXISTS
    FOR (p:Product) REQUIRE p.idempotencyKey IS UNIQUE
@@ -115,7 +115,6 @@ A full-stack e-commerce app built with **Next.js 16**, **TypeScript** and a **gr
 - **Optimistic locking:** products carry a `version` that the edit form sends back; the update only applies when it still matches, so two admins cannot silently overwrite each other's changes.
 
 ## Known limitations and next steps
-
 
 - No stock management, payments or order status flow.
 - No rate limiting on login and no automated tests yet.
