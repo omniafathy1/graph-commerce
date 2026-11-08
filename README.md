@@ -112,6 +112,7 @@ A full-stack e-commerce app built with **Next.js 16**, **TypeScript** and a **gr
 - **Atomic checkout:** creating the order and emptying the cart run in one transaction, so a failure never leaves an order behind with a full cart.
 - **Idempotent writes:** checkout and product creation carry a client-generated idempotency key backed by a unique constraint, so retries and double submits return the existing record instead of creating a duplicate.
 - **Intent-based admin actions:** hiding or showing a product sends the desired state instead of flipping the current one, so double clicks and stale pages cannot undo each other.
+- **Optimistic locking:** products carry a `version` that the edit form sends back; the update only applies when it still matches, so two admins cannot silently overwrite each other's changes.
 
 ## Known limitations and next steps
 

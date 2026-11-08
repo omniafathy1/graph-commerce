@@ -1,5 +1,5 @@
 import { cacheLife, cacheTag } from "next/cache";
-import { runQuery } from "../lib/db";
+import { runQuery, toNum } from "../lib/db";
 
 export async function getCategories() {
   "use cache";
@@ -84,14 +84,15 @@ export async function getRelatedProducts(id: string) {
   }));
 }
 
-// عمدًا من غير كاش: الأدمن لازم يعدّل على الداتا الحية
+
 export async function getProductForAdmin(id: string) {
   const records = await runQuery(
     `
     MATCH (p:Product)-[:BELONGS_TO]->(c:Category)
     WHERE elementId(p) = $id
     RETURN p.name AS name, p.description AS description,
-           p.price AS price, c.name AS category
+           p.price AS price, c.name AS category,
+           coalesce(p.version, 0) AS version
     `,
     { id }
   );
@@ -104,5 +105,6 @@ export async function getProductForAdmin(id: string) {
     description: (r.get("description") ?? "") as string,
     price: r.get("price").toNumber() as number,
     category: r.get("category") as string,
+    version: toNum(r.get("version")),
   };
 }

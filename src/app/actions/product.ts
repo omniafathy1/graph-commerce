@@ -61,7 +61,6 @@ export async function createProductAction(
   }
 
   try {
-    // MERGE: لو المنتج بالمفتاح ده موجود، متعملش واحد جديد
     const records = await runQuery(
       `
       MATCH (c:Category {name: $category})
@@ -87,7 +86,6 @@ export async function createProductAction(
   redirect("/admin");
 }
 
-// الـ id أول argument لأنه جاي من .bind(null, id)
 export async function updateProductAction(
   id: string,
   prevState: ProductFormState,
@@ -100,27 +98,37 @@ export async function updateProductAction(
   if (!parsed.ok) return { error: parsed.error, values: parsed.values };
   const { name, description, category, price } = parsed.data;
 
+  const version = Number(formData.get("version"));
+  if (!Number.isInteger(version) || version < 0) {
+    return { error: "طلب غير صالح", values: formData2values(parsed.data) };
+  }
+
   try {
     const records = await runQuery(
       `
-        MATCH (p:Product) WHERE elementId(p) = $id
-        MATCH (c:Category {name: $category})
-        SET p.name = $name,
-            p.description = $description,
-            p.price = toInteger($price)
-        MERGE (p)-[:BELONGS_TO]->(c)
-        WITH p, c
-        OPTIONAL MATCH (p)-[old:BELONGS_TO]->(oc:Category)
-        WHERE elementId(oc) <> elementId(c)
-        DELETE old
-        RETURN elementId(p) AS id
+      MATCH (p:Product) WHERE elementId(p) = $id
+      MATCH (c:Category {name: $category})
+      WITH p, c, coalesce(p.version, 0) AS current
+      WHERE current = $version
+      SET p.name = $name,
+          p.description = $description,
+          p.price = toInteger($price),
+          p.version = current + 1
+      MERGE (p)-[:BELONGS_TO]->(c)
+      WITH p, c
+      OPTIONAL MATCH (p)-[old:BELONGS_TO]->(oc:Category)
+      WHERE elementId(oc) <> elementId(c)
+      DELETE old
+      RETURN elementId(p) AS id
       `,
-      { id, category, name, description, price }
+      { id, category, name, description, price, version }
     );
 
     if (records.length === 0) {
+      // مش عارفين السبب: إما اتعدّل من حد تاني أو المنتج/التصنيف اتمسح
       return {
-        error: "المنتج أو التصنيف مش موجود",
+        error:
+          "المنتج اتعدّل من حد تاني أو لم يعد موجودًا. حدّثي الصفحة وحاولي تاني.",
         values: formData2values(parsed.data),
       };
     }
@@ -128,11 +136,10 @@ export async function updateProductAction(
     return { error: "حصل خطأ، حاول تاني", values: formData2values(parsed.data) };
   }
 
-// updateProductAction
-updateTag("products");
-updateTag(`product-${id}`);
-updateTag("stats");   // الاسم والتصنيف بيظهروا في الإحصائيات
-redirect("/admin");
+  updateTag("products");
+  updateTag(`product-${id}`);
+  updateTag("stats");
+  redirect("/admin");
 }
 
 export async function setProductActiveAction(formData: FormData): Promise<void> {

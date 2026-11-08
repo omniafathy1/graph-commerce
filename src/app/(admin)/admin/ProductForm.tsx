@@ -14,6 +14,7 @@ type Props = {
     description: string;
     price: number;
     category: string;
+    version?: number;
   };
   submitLabel: string;
 };
@@ -30,6 +31,9 @@ const [idempotencyKey] = useState(() => crypto.randomUUID());
 
   return (
     <form action={formAction} className="space-y-4 max-w-md">
+      {initial?.version !== undefined && (
+      <input type="hidden" name="version" value={initial.version} />
+    )}
       <input type="hidden" name="idempotencyKey" value={idempotencyKey} />
       <input
         name="name"
