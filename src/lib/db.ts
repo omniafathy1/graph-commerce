@@ -25,11 +25,6 @@ export async function runQuery(cypher: string, params: Record<string, any> = {})
   }
 }
 
-export function toNum(value: unknown): number {
-  if (value === null || value === undefined) return 0;
-  return neo4j.isInt(value) ? value.toNumber() : Number(value);
-}
-
 // db.ts
 export async function runInTransaction<T>(work: (tx: ManagedTransaction) => Promise<T>) {
   const session = getDriver().session();
@@ -39,3 +34,5 @@ export async function runInTransaction<T>(work: (tx: ManagedTransaction) => Prom
     await session.close();
   }
 }
+
+export { toNum } from "./toNum";
