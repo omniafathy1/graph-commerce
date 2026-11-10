@@ -19,7 +19,7 @@ describe("parseProductForm", () => {
     const result = parseProductForm(form(valid));
     expect(result).toEqual({
       ok: true,
-      data: { name: "Phone", description: "Good camera", category: "Electronics", price: 500 },
+      data: { name: "Phone", description: "Good camera", category: "Electronics", price: 500 , stock: null,},
     });
   });
 
@@ -60,5 +60,18 @@ describe("parseProductForm", () => {
     if (!result.ok) {
       expect(result.values).toMatchObject({ name: "Phone", price: "-1" });
     }
+  });
+    it("treats an empty stock as unlimited (null)", () => {
+    const result = parseProductForm(form({ ...valid, stock: "" }));
+    expect(result.ok && result.data.stock).toBeNull();
+  });
+
+  it.each(["-1", "2.5", "abc"])("rejects invalid stock %j", (stock) => {
+    expect(parseProductForm(form({ ...valid, stock })).ok).toBe(false);
+  });
+
+  it("accepts zero stock", () => {
+    const result = parseProductForm(form({ ...valid, stock: "0" }));
+    expect(result.ok && result.data.stock).toBe(0);
   });
 });

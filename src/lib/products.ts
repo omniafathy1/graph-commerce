@@ -91,7 +91,7 @@ export async function getProductForAdmin(id: string) {
     MATCH (p:Product)-[:BELONGS_TO]->(c:Category)
     WHERE elementId(p) = $id
     RETURN p.name AS name, p.description AS description,
-           p.price AS price, c.name AS category,
+           p.price AS price, c.name AS category, p.stock AS stock,
            coalesce(p.version, 0) AS version
     `,
     { id }
@@ -106,5 +106,6 @@ export async function getProductForAdmin(id: string) {
     price: r.get("price").toNumber() as number,
     category: r.get("category") as string,
     version: toNum(r.get("version")),
+    stock: r.get("stock") === null ? null : toNum(r.get("stock")),
   };
 }

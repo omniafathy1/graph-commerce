@@ -7,7 +7,7 @@ A full-stack e-commerce app built with **Next.js 16**, **TypeScript** and a **gr
 ## Features
 
 - **Catalog:** category filters driven by the URL, product details, related products from graph relationships, and a quick-view modal (parallel + intercepting routes).
-- **Cart and checkout:** per-user cart stored in the database, optimistic updates with React Query, toast notifications with Zustand, and an atomic, idempotent checkout that creates the order and snapshots unit prices.
+- **Cart and checkout:** per-user cart stored in the database, optimistic updates with React Query, toast notifications with Zustand, and an atomic, idempotent checkout that checks and deducts stock, creates the order and snapshots unit prices.
 - **Authentication:** signup, login and logout with bcrypt-hashed passwords and a signed JWT in an httpOnly cookie. Private routes are protected in `proxy.ts`.
 - **Admin dashboard:** role-based authorization (the role is read from the database, not from the token) to add, edit and hide products with idempotent writes and optimistic locking, plus sales analytics (totals, top products, revenue by category).
 - **Performance:** Next.js Cache Components (`use cache`, `cacheTag`, `updateTag`), Suspense streaming, and loading, error and not-found boundaries.
@@ -115,11 +115,13 @@ A full-stack e-commerce app built with **Next.js 16**, **TypeScript** and a **gr
 - **Idempotent writes:** checkout and product creation carry a client-generated idempotency key backed by a unique constraint, so retries and double submits return the existing record instead of creating a duplicate.
 - **Intent-based admin actions:** hiding or showing a product sends the desired state instead of flipping the current one, so double clicks and stale pages cannot undo each other.
 - **Optimistic locking:** products carry a `version` that the edit form sends back; the update only applies when it still matches, so two admins cannot silently overwrite each other's changes.
+- **Oversell protection:** stock is deducted with a conditional update (`stock >= quantity`) inside the checkout transaction, so concurrent buyers cannot drive it negative and one out-of-stock item rolls back the whole order. Products without a `stock` value are treated as unlimited.
 
 ## Known limitations and next steps
 
-- No stock management, payments or order status flow.
+- No payments or order status flow.
 - No rate limiting on login; test coverage is limited to form validation so far
 - `elementId()` is used in URLs; a UUID property would be more stable.
 - Categories and related products are managed with Cypher, not from the UI.
 - Checkouts from two different tabs use different keys; a per-customer lock would close that gap.
+- Stock is deducted at checkout, so items in a cart are not reserved.

@@ -14,6 +14,7 @@ type Props = {
     description: string;
     price: number;
     category: string;
+    stock?: number | null;
     version?: number;
   };
   submitLabel: string;
@@ -51,6 +52,15 @@ const [idempotencyKey] = useState(() => crypto.randomUUID());
         defaultValue={v?.price ?? initial?.price}
         placeholder="السعر بالجنيه"
         required
+        className="w-full border rounded p-2"
+      />
+      <input
+        name="stock"
+        type="number"
+        min={0}
+        step={1}
+        defaultValue={v?.stock ?? initial?.stock ?? ""}
+        placeholder="المخزون (اتركه فاضي لو غير محدود)"
         className="w-full border rounded p-2"
       />
       <textarea

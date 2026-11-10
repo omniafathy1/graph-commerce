@@ -21,7 +21,7 @@ export async function createProductAction(
 
   const parsed = parseProductForm(formData);
   if (!parsed.ok) return { error: parsed.error, values: parsed.values };
-  const { name, description, category, price } = parsed.data;
+  const { name, description, category, price, stock } = parsed.data;
 
   const key = String(formData.get("idempotencyKey") ?? "");
   if (!UUID_RE.test(key)) {
@@ -36,11 +36,12 @@ export async function createProductAction(
       ON CREATE SET p.name = $name,
                     p.description = $description,
                     p.price = toInteger($price),
-                    p.active = true
+                    p.active = true,
+                    p.stock = $stock
       MERGE (p)-[:BELONGS_TO]->(c)
       RETURN elementId(p) AS id
       `,
-      { category, name, description, price, key }
+      { category, name, description, price, key , stock: parsed.data.stock}
     );
 
     if (records.length === 0) {
@@ -64,7 +65,7 @@ export async function updateProductAction(
 
   const parsed = parseProductForm(formData);
   if (!parsed.ok) return { error: parsed.error, values: parsed.values };
-  const { name, description, category, price } = parsed.data;
+  const { name, description, category, price, stock } = parsed.data;
 
   const version = Number(formData.get("version"));
   if (!Number.isInteger(version) || version < 0) {
@@ -81,7 +82,8 @@ export async function updateProductAction(
       SET p.name = $name,
           p.description = $description,
           p.price = toInteger($price),
-          p.version = current + 1
+          p.version = current + 1,
+          p.stock = $stock
       MERGE (p)-[:BELONGS_TO]->(c)
       WITH p, c
       OPTIONAL MATCH (p)-[old:BELONGS_TO]->(oc:Category)
@@ -89,7 +91,7 @@ export async function updateProductAction(
       DELETE old
       RETURN elementId(p) AS id
       `,
-      { id, category, name, description, price, version }
+      { id, category, name, description, price, version, stock: parsed.data.stock }
     );
 
     if (records.length === 0) {
@@ -134,6 +136,7 @@ function formData2values(d: {
   description: string;
   category: string;
   price: number;
+  stock: number | null;
 }): Record<string, string> {
-  return { ...d, price: String(d.price) };
+  return { ...d, price: String(d.price), stock: d.stock !== null ? String(d.stock) : "" };
 }

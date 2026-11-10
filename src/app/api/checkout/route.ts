@@ -4,6 +4,11 @@ import { runInTransaction, runQuery, toNum } from "../../../lib/db";
 import { getCurrentUser } from "../../../lib/auth";
 
 class EmptyCartError extends Error {}
+class OutOfStockError extends Error {
+  constructor(public productName: string) {
+    super("OUT_OF_STOCK");
+  }
+}
 
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -64,6 +69,28 @@ export async function POST(request: Request) {
         throw new EmptyCartError();
       }
 
+            // 2.5) خصم المخزون: لكل منتج، بترتيب ثابت (لتجنب deadlock)
+      const items = await tx.run(
+        `MATCH (c:Customer)-[cart:HAS_IN_CART]->(p:Product)
+         WHERE elementId(c) = $customerId
+         RETURN elementId(p) AS id, p.name AS name, cart.quantity AS qty
+         ORDER BY elementId(p)`,
+        params
+      );
+
+      for (const row of items.records) {
+        const deducted = await tx.run(
+          `MATCH (p:Product) WHERE elementId(p) = $id
+             AND (p.stock IS NULL OR p.stock >= $qty)
+           SET p.stock = CASE WHEN p.stock IS NULL THEN null ELSE p.stock - $qty END
+           RETURN elementId(p) AS id`,
+          { id: row.get("id"), qty: toNum(row.get("qty")) }
+        );
+        if (deducted.records.length === 0) {
+          throw new OutOfStockError(row.get("name") as string);
+        }
+      }
+
       // 3) إنشاء الأوردر (ومعاه المفتاح) وربط المنتجات
       const created = await tx.run(
         `
@@ -105,6 +132,16 @@ export async function POST(request: Request) {
       }
     } catch {
       // نكمّل للرد بالخطأ تحت
+    }
+
+        if (error instanceof OutOfStockError) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: `الكمية المطلوبة من "${error.productName}" غير متوفرة`,
+        },
+        { status: 409 }
+      );
     }
 
     if (error instanceof EmptyCartError) {
