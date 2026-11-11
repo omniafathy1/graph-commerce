@@ -3,12 +3,19 @@
 import Link from "next/link";
 import { useCart } from "../../../hooks/useCart";
 import CheckoutButton from "./CheckoutButton";
+import { useRouter } from 'next/navigation';
+import { useQueryClient } from "@tanstack/react-query";
+import { useRemoveFromCart } from "../../../hooks/useRemoveFromCart";
 
 export default function CartPage() {
   const { data, isLoading } = useCart();
   const items = data?.items ?? [];
+  const router = useRouter();
+  const queryClient = useQueryClient();
+  const { mutate: removeItem, isPending: removing } = useRemoveFromCart();
 
   const total = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
+
 
   if (isLoading) {
     return (
@@ -55,7 +62,17 @@ export default function CartPage() {
                   <p className="truncate font-bold">{item.name}</p>
                   <p className="mt-1 text-sm text-[var(--muted)]">الكمية: {item.quantity}</p>
                 </div>
-                <p className="shrink-0 font-bold">{item.price * item.quantity} جنيه</p>
+          <div className="flex shrink-0 flex-col items-end gap-1">
+            <p className="font-bold">{item.price * item.quantity} جنيه</p>
+            <button
+              onClick={() => removeItem(item.id)}
+              disabled={removing}
+              aria-label={`حذف ${item.name} من العربة`}
+              className="text-sm text-red-500 hover:text-red-700 disabled:opacity-50"
+            >
+              حذف
+            </button>
+          </div>
               </div>
             ))}
           </div>
