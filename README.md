@@ -27,7 +27,7 @@ A full-stack e-commerce app built with **Next.js 16**, **TypeScript** and a **gr
 | Auth | `bcryptjs`, `jsonwebtoken`, `jose`, httpOnly cookies |
 | State | TanStack React Query (server state), Zustand (UI state) |
 | Mutations | Server Actions for forms, Route Handlers for cart and checkout |
-| Testing | Vitest |
+|Testing: Vitest, Playwright
 
 ## Graph model
 
@@ -103,6 +103,7 @@ A full-stack e-commerce app built with **Next.js 16**, **TypeScript** and a **gr
 | `npm start` | Run the production build |
 | `npm run lint` | Lint the code |
 | `npm test` | Run the unit tests |
+| `npm run test:e2e` | Run the Playwright end-to-end tests (writes and cleans up e2e- test data in the configured database) |
 
 ## Design decisions
 
@@ -121,7 +122,7 @@ A full-stack e-commerce app built with **Next.js 16**, **TypeScript** and a **gr
 ## Known limitations and next steps
 
 - No payments or order status flow.
-- No automated tests beyond form validation and small utilities.
+- Tests cover validation, small utilities and the main purchase flow; no CI yet
 - `elementId()` is used in URLs; a UUID property would be more stable.
 - Categories and related products are managed with Cypher, not from the UI.
 - Checkouts from two different tabs use different keys; a per-customer lock would close that gap.
