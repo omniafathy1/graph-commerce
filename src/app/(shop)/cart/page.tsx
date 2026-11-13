@@ -3,15 +3,11 @@
 import Link from "next/link";
 import { useCart } from "../../../hooks/useCart";
 import CheckoutButton from "./CheckoutButton";
-import { useRouter } from 'next/navigation';
-import { useQueryClient } from "@tanstack/react-query";
 import { useRemoveFromCart } from "../../../hooks/useRemoveFromCart";
 
 export default function CartPage() {
   const { data, isLoading } = useCart();
   const items = data?.items ?? [];
-  const router = useRouter();
-  const queryClient = useQueryClient();
   const { mutate: removeItem, isPending: removing } = useRemoveFromCart();
 
   const total = items.reduce((sum, i) => sum + i.price * i.quantity, 0);

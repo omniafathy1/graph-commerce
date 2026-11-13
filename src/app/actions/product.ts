@@ -21,7 +21,7 @@ export async function createProductAction(
 
   const parsed = parseProductForm(formData);
   if (!parsed.ok) return { error: parsed.error, values: parsed.values };
-  const { name, description, category, price, stock } = parsed.data;
+  const { name, description, category, price } = parsed.data;
 
   const key = String(formData.get("idempotencyKey") ?? "");
   if (!UUID_RE.test(key)) {
@@ -65,7 +65,7 @@ export async function updateProductAction(
 
   const parsed = parseProductForm(formData);
   if (!parsed.ok) return { error: parsed.error, values: parsed.values };
-  const { name, description, category, price, stock } = parsed.data;
+  const { name, description, category, price } = parsed.data;
 
   const version = Number(formData.get("version"));
   if (!Number.isInteger(version) || version < 0) {

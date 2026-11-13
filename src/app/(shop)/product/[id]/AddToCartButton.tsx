@@ -9,6 +9,7 @@ export default function AddToCartButton({ id }: { id: string }) {
 
   function handleAdd() {
     mutate(id, {
+      //eslint-disable-next-line @typescript-eslint/no-explicit-any
       onError: (err: any) => {
         if (err.message === "UNAUTHORIZED") {
           router.push("/login");

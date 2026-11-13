@@ -14,7 +14,7 @@ export function getDriver(): Driver {
   }
   return driver;
 }
-
+//eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function runQuery(cypher: string, params: Record<string, any> = {}) {
   const session = getDriver().session();
   try {

@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "./useToast";
 
+//eslint-disable-next-line @typescript-eslint/no-explicit-any
 type CartData = { items: any[]; count: number };
 
 export function useAddToCart() {
