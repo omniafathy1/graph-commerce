@@ -1,5 +1,7 @@
 # Graph Commerce
 
+![CI](https://github.com/omniafathy1/graph-commerce/actions/workflows/ci.yml/badge.svg)
+
 A full-stack e-commerce app built with **Next.js 16**, **TypeScript** and a **graph database** (CognoDB, queried with Cypher over Bolt). Products, categories, carts and orders are modeled as nodes and relationships, so features like related products and sales analytics are simple graph traversals.
 
 ![Storefront](docs/screenshots/storefront.png)
@@ -122,7 +124,8 @@ A full-stack e-commerce app built with **Next.js 16**, **TypeScript** and a **gr
 ## Known limitations and next steps
 
 - No payments or order status flow.
-- Tests cover validation, small utilities and the main purchase flow; no CI yet
+- Tests cover validation, small utilities and the main purchase flow;
+- CI runs lint, unit tests and the build; the Playwright end-to-end tests run locally because they need database credentials.
 - `elementId()` is used in URLs; a UUID property would be more stable.
 - Categories and related products are managed with Cypher, not from the UI.
 - Checkouts from two different tabs use different keys; a per-customer lock would close that gap.
