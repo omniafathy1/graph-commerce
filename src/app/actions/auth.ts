@@ -6,6 +6,7 @@ import { cookies ,headers} from "next/headers";
 import { redirect } from "next/navigation";
 import { runQuery } from "../../lib/db";
 import { checkLimit, recordFailure, clearFailures } from "../../lib/rateLimit";
+import { logger } from "@/src/lib/logger";
 
 export type AuthState = { error?: string } | undefined;
 
@@ -88,11 +89,13 @@ export async function loginAction(
     ]);
 
     if (!byEmail.allowed || !byIp.allowed) {
+      logger.warn({ ip, reason: "rate_limited" }, "login blocked");
+      
       const wait = Math.max(byEmail.retryAfterSec, byIp.retryAfterSec);
       return { error: `محاولات كتير. حاول بعد ${Math.ceil(wait / 60)} دقيقة.` };
     }
   } catch (error) {
-    console.error("Rate limit check failed:", error);
+    logger.error({ err: error }, "Rate limit check failed");
   }
 
   // 2) التحقق من الباسورد
@@ -112,7 +115,7 @@ export async function loginAction(
       try {
         await Promise.all([recordFailure(emailKey), recordFailure(ipKey)]);
       } catch (error) {
-        console.error("Recording login failure failed:", error);
+        logger.error({ err: error }, "Recording login failure failed");
       }
       return { error: "الإيميل أو الباسورد غلط" };
     }

@@ -120,6 +120,7 @@ A full-stack e-commerce app built with **Next.js 16**, **TypeScript** and a **gr
 - **Optimistic locking:** products carry a `version` that the edit form sends back; the update only applies when it still matches, so two admins cannot silently overwrite each other's changes.
 - **Oversell protection:** stock is deducted with a conditional update (`stock >= quantity`) inside the checkout transaction, so concurrent buyers cannot drive it negative and one out-of-stock item rolls back the whole order. Products without a `stock` value are treated as unlimited.
 - **Login rate limiting:** failed attempts are counted per email and per IP in a fixed 15-minute window using an atomic upsert, and the check runs before the password comparison. Attempts are recorded for unknown emails too, so the behavior never reveals which accounts exist.
+- **Structured logging:** server logs are JSON lines with a route and request id, with secrets redacted and no personal data from forms, so they can be searched and correlated with the platform's request ids.
 
 ## Known limitations and next steps
 

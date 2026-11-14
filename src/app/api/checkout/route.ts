@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { revalidateTag } from "next/cache";
 import { runInTransaction, runQuery, toNum } from "../../../lib/db";
 import { getCurrentUser } from "../../../lib/auth";
+import { logger } from "@/src/lib/logger";
+import error from "../../(shop)/error";
 
 class EmptyCartError extends Error {}
 class OutOfStockError extends Error {
@@ -30,6 +32,11 @@ export async function POST(request: Request) {
       { status: 401 }
     );
   }
+  const log = logger.child({
+  route: "checkout",
+  requestId: request.headers.get("x-vercel-id") ?? crypto.randomUUID(),
+  customerId: user.customerId,
+});
 
   const key = request.headers.get("Idempotency-Key");
   if (!key || !UUID_RE.test(key)) {
@@ -121,6 +128,8 @@ export async function POST(request: Request) {
 
     // بعد الـ commit، ومش بنعمله لو الأوردر قديم
     if (!replayed) revalidateTag("stats", "max");
+    
+    log.info({ orderId, replayed }, "checkout completed");
 
     return NextResponse.json({ success: true, orderId });
   } catch (error) {
@@ -135,6 +144,8 @@ export async function POST(request: Request) {
     }
 
         if (error instanceof OutOfStockError) {
+        log.warn({ product: error.productName }, "checkout rejected: out of stock");
+
       return NextResponse.json(
         {
           success: false,
@@ -150,8 +161,8 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
-
-    console.error("Checkout error:", error);
+log.error({ err: error }, "checkout failed");
+logger.error({ err: error, customerId: user.customerId, route: "checkout" }, "checkout failed");
     return NextResponse.json(
       { success: false, error: "حصل خطأ، حاول تاني" },
       { status: 500 }
