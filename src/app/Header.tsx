@@ -29,7 +29,7 @@ export default function Header({
             <Link href="/orders" className="text-sm">طلباتي</Link>
             <span className="text-sm text-gray-600">{user.email}</span>
             <form action={logoutAction}>
-              <button className="text-sm text-red-500">خروج</button>
+              <button className="text-sm text-red-700 hover:text-red-900">خروج</button>
             </form>
           </>
         ) : (

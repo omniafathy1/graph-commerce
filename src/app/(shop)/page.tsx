@@ -43,7 +43,7 @@ async function HomeContent({
               key={product.id}
               className="border rounded-lg p-4 shadow-sm hover:bg-gray-50"
             >
-              <span className="text-xs text-gray-500">{product.category}</span>
+              <span className="text-xs text-gray-600">{product.category}</span>
               <h2 className="text-lg font-semibold">{product.name}</h2>
               <p className="text-gray-600 text-sm mb-2">{product.description}</p>
               <p className="font-bold">{product.price} جنيه</p>

@@ -68,4 +68,6 @@ export async function cleanup(): Promise<void> {
      WHERE a.key CONTAINS 'e2e-' AND a.key CONTAINS '@test.local'
      DETACH DELETE a`
   );
+  await run(
+    `MATCH (a:LoginAttempt) WHERE a.key STARTS WITH 'signup:' DETACH DELETE a`);
 }

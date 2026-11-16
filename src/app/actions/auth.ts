@@ -35,6 +35,22 @@ export async function signupAction(
   if (!name || !email || password.length < 6) {
     return { error: "كل الحقول مطلوبة، والباسورد 6 حروف على الأقل" };
   }
+  
+  const h = await headers();
+  const ip = h.get("x-forwarded-for")?.split(",")[0].trim() ?? "unknown";
+  const signupKey = `signup:ip:${ip}`;
+  const HOUR = 60 * 60 * 1000;
+
+  try {
+    const limit = await checkLimit(signupKey, 5, HOUR);
+    if (!limit.allowed) {
+      logger.warn({ ip, reason: "signup_rate_limited" }, "signup blocked");
+      return { error: `محاولات كتير. حاول بعد ${Math.ceil(limit.retryAfterSec / 60)} دقيقة.` };
+    }
+    await recordFailure(signupKey, HOUR); // بنعدّ كل محاولة
+  } catch (error) {
+    logger.error({ err: error }, "signup rate limit failed"); // fail-open
+  }
 
   let customerId: string;
   try {

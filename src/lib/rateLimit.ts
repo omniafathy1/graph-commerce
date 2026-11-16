@@ -15,13 +15,17 @@ export function retryAfterSeconds(
 export type LimitResult = { allowed: boolean; retryAfterSec: number };
 
 /** هل المفتاح تجاوز الحد؟ (قراءة بس، مش بتزوّد) */
-export async function checkLimit(key: string, max: number): Promise<LimitResult> {
+export async function checkLimit(
+  key: string,
+  max: number,
+  windowMs: number = WINDOW_MS
+): Promise<LimitResult> {
   const now = Date.now();
   const records = await runQuery(
     `MATCH (a:LoginAttempt {key: $key})
      WHERE a.windowStart > $cutoff
      RETURN a.count AS count, a.windowStart AS windowStart`,
-    { key, cutoff: now - WINDOW_MS }
+    { key, cutoff: now - windowMs }
   );
 
   if (records.length === 0) return { allowed: true, retryAfterSec: 0 };
@@ -30,11 +34,18 @@ export async function checkLimit(key: string, max: number): Promise<LimitResult>
   const windowStart = toNum(records[0].get("windowStart"));
   if (count < max) return { allowed: true, retryAfterSec: 0 };
 
-  return { allowed: false, retryAfterSec: retryAfterSeconds(windowStart, now) };
+  return {
+    allowed: false,
+    retryAfterSec: retryAfterSeconds(windowStart, now, windowMs),
+  };
 }
 
+
 /** سجّل محاولة فاشلة: نافذة جديدة أو زيادة الحالية (atomic) */
-export async function recordFailure(key: string): Promise<void> {
+export async function recordFailure(
+  key: string,
+  windowMs: number = WINDOW_MS
+): Promise<void> {
   const now = Date.now();
   await runQuery(
     `MERGE (a:LoginAttempt {key: $key})
@@ -42,7 +53,7 @@ export async function recordFailure(key: string): Promise<void> {
      ON MATCH SET
        a.count = CASE WHEN a.windowStart > $cutoff THEN a.count + 1 ELSE 1 END,
        a.windowStart = CASE WHEN a.windowStart > $cutoff THEN a.windowStart ELSE $now END`,
-    { key, now, cutoff: now - WINDOW_MS }
+    { key, now, cutoff: now - windowMs }
   );
 }
 
