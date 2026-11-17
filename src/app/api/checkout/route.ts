@@ -3,7 +3,6 @@ import { revalidateTag } from "next/cache";
 import { runInTransaction, runQuery, toNum } from "../../../lib/db";
 import { getCurrentUser } from "../../../lib/auth";
 import { logger } from "@/src/lib/logger";
-import error from "../../(shop)/error";
 
 class EmptyCartError extends Error {}
 class OutOfStockError extends Error {

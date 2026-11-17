@@ -1,8 +1,10 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { requireAdmin } from "../../lib/auth";
+import { connection } from "next/server";
 
 async function AdminShell({ children }: { children: React.ReactNode }) {
+  await connection();
   await requireAdmin();
 
   return (

@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import Header from "../Header";
 import { getCurrentUser } from "../../lib/auth";
+import { connection } from "next/server";
 
 async function ShopShell({
   children,
@@ -9,6 +10,7 @@ async function ShopShell({
   children: React.ReactNode;
   modal: React.ReactNode;
 }) {
+  await connection();
   const user = await getCurrentUser();
 
   return (
