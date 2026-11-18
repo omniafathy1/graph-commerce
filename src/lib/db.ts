@@ -15,12 +15,12 @@ export function getDriver(): Driver {
   }
   return driver;
 }
+  const SLOW_QUERY_MS = 500;
+
 //eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function runQuery(cypher: string, params: Record<string, any> = {}) {
   const session = getDriver().session();
-  const SLOW_QUERY_MS = 1;
   const started = performance.now();
-
 
   try {
     const result = await session.run(cypher, params);
