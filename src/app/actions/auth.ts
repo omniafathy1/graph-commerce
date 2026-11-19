@@ -6,12 +6,20 @@ import { cookies ,headers} from "next/headers";
 import { redirect } from "next/navigation";
 import { runQuery } from "../../lib/db";
 import { checkLimit, recordFailure, clearFailures } from "../../lib/rateLimit";
-import { logger } from "@/src/lib/logger";
+import { logger } from "../../lib/logger";
+import {
+  createSession,
+  getCurrentUser,
+  readToken,
+  revokeAllSessions,
+  revokeSession,
+} from "../../lib/auth";
 
 export type AuthState = { error?: string } | undefined;
 
 async function setSessionCookie(customerId: string, email: string) {
-  const token = jwt.sign({ customerId, email }, process.env.JWT_SECRET!, {
+  const sid = await createSession(customerId);
+  const token = jwt.sign({ customerId, email, sid }, process.env.JWT_SECRET!, {
     expiresIn: "7d",
   });
   const cookieStore = await cookies();
@@ -23,7 +31,6 @@ async function setSessionCookie(customerId: string, email: string) {
     path: "/",
   });
 }
-
 export async function signupAction(
   prevState: AuthState,
   formData: FormData
@@ -73,10 +80,14 @@ export async function signupAction(
     return { error: "حصل خطأ، حاول تاني" };
   }
 
-  await setSessionCookie(customerId, email);
+  try {
+    await setSessionCookie(customerId, email);
+  } catch (error) {
+    logger.error({ err: error }, "creating session failed");
+    return { error: "حصل خطأ، حاول تاني" };
+  }
   redirect("/");
 }
-
 const MAX_BY_EMAIL = 5;
 const MAX_BY_IP = 20;
 
@@ -147,11 +158,39 @@ export async function loginAction(
     console.error("Clearing login failures failed:", error);
   }
 
-  await setSessionCookie(customerId, email);
+  try {
+    await setSessionCookie(customerId, email);
+  } catch (error) {
+    logger.error({ err: error }, "creating session failed");
+    return { error: "حصل خطأ، حاول تاني" };
+  }
   redirect("/");
 }
 
 export async function logoutAction() {
+  const token = await readToken();
+  if (token) {
+    try {
+      await revokeSession(token.sid);
+    } catch (error) {
+      logger.error({ err: error }, "revoking session failed");
+    }
+  }
+  const cookieStore = await cookies();
+  cookieStore.delete("token");
+  redirect("/");
+}
+
+/** يخرج من كل الأجهزة */
+export async function logoutAllAction() {
+  const user = await getCurrentUser();
+  if (user) {
+    try {
+      await revokeAllSessions(user.customerId);
+    } catch (error) {
+      logger.error({ err: error }, "revoking all sessions failed");
+    }
+  }
   const cookieStore = await cookies();
   cookieStore.delete("token");
   redirect("/");

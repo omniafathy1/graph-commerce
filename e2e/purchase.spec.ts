@@ -56,3 +56,34 @@ test("two buyers cannot oversell: stock never goes negative", async ({ browser }
   await ctxA.close();
   await ctxB.close();
 });
+
+test("logging out revokes the session even if the token was copied", async ({ browser }) => {
+  const baseURL = "http://localhost:3000";
+  const ctx = await browser.newContext({ baseURL });
+  const page = await ctx.newPage();
+  await signup(page, uniqueEmail());
+
+  const tokenCookie = (await ctx.cookies()).find((c) => c.name === "token");
+  expect(tokenCookie).toBeTruthy();
+
+  // checkout على عربة فاضية: 400 = مسجل دخول، 401 = لأ
+  const probe = (request: { post: typeof page.request.post }) =>
+    request.post("/api/checkout", {
+      headers: { "Idempotency-Key": crypto.randomUUID() },
+    });
+
+  expect((await probe(page.request)).status()).toBe(400);
+
+  await page.getByRole("button", { name: "خروج" }).click();
+  await expect
+    .poll(async () => (await ctx.cookies()).some((c) => c.name === "token"))
+    .toBe(false);
+
+  // حد نسخ التوكن قبل الخروج، وبيحاول يستخدمه بعد الخروج
+  const stolen = await browser.newContext({ baseURL });
+  await stolen.addCookies([tokenCookie!]);
+  expect((await probe(stolen.request)).status()).toBe(401);
+
+  await ctx.close();
+  await stolen.close();
+});

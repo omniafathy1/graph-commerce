@@ -38,6 +38,7 @@ A full-stack e-commerce app built with **Next.js 16**, **TypeScript** and a **gr
 (Customer)-[:PLACED]->(Order)-[:CONTAINS {quantity, unitPrice}]->(Product)
 (Product)-[:BELONGS_TO]->(Category)
 (Product)-[:RELATED_TO]->(Product)
+(Customer)-[:HAS_SESSION]->(Session)
 ```
 
 ## Getting started
@@ -79,6 +80,11 @@ A full-stack e-commerce app built with **Next.js 16**, **TypeScript** and a **gr
 
    ```cypher
    CREATE (:Category {name: 'Electronics'}), (:Category {name: 'Clothing'})
+   ```
+   
+   ```cypher
+   CREATE CONSTRAINT session_id_unique IF NOT EXISTS
+   FOR (s:Session) REQUIRE s.id IS UNIQUE
    ```
 
 4. Start the app with `npm run dev` and open http://localhost:3000.
@@ -122,6 +128,8 @@ A full-stack e-commerce app built with **Next.js 16**, **TypeScript** and a **gr
 - **Login rate limiting:** failed attempts are counted per email and per IP in a fixed 15-minute window using an atomic upsert, and the check runs before the password comparison. Attempts are recorded for unknown emails too, so the behavior never reveals which accounts exist.
 - **Structured logging:** server logs are JSON lines with a route and request id, with secrets redacted and no personal data from forms, so they can be searched and correlated with the platform's request ids.
 - **Crawl rules:** `robots.ts` serves a real robots.txt that keeps the admin area, API and private pages out of search indexes. This is a hint for crawlers, not access control; authorization is enforced by the proxy and the server actions.
+- **Security headers:** the app sends nosniff, frame denial, a strict referrer policy and a restrictive permissions policy. A Content-Security-Policy is intentionally not enabled yet because a wrong policy can break Next.js hydration; it will be rolled out in report-only mode first.
+- **Server-side sessions:** each login creates a `Session` node and the JWT carries its id, which is checked on every request (deduplicated per request with `React.cache`). Logout deletes the session, so a copied token stops working immediately, and "log out everywhere" is possible. If the session lookup fails the user is treated as signed out (fail closed).
 
 ## Known limitations and next steps
 
@@ -133,3 +141,5 @@ A full-stack e-commerce app built with **Next.js 16**, **TypeScript** and a **gr
 - Checkouts from two different tabs use different keys; a per-customer lock would close that gap.
 - Stock is deducted at checkout, so items in a cart are not reserved.
 - The login limiter uses a fixed window and trusts `x-forwarded-for`, so the per-IP limit can be bypassed; the per-email limit is the main protection.
+- No Content-Security-Policy yet.
+- Every authenticated request costs one extra database read; there is no rotation of short-lived tokens.

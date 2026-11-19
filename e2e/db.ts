@@ -55,6 +55,11 @@ export async function cleanup(): Promise<void> {
      WHERE c.email STARTS WITH 'e2e-' AND c.email ENDS WITH '@test.local'
      DETACH DELETE o`
   );
+    await run(
+    `MATCH (c:Customer)-[:HAS_SESSION]->(s:Session)
+     WHERE c.email STARTS WITH 'e2e-' AND c.email ENDS WITH '@test.local'
+     DETACH DELETE s`
+  );
   await run(
     `MATCH (c:Customer)
      WHERE c.email STARTS WITH 'e2e-' AND c.email ENDS WITH '@test.local'
