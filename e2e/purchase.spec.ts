@@ -1,6 +1,6 @@
-import { test, expect } from "@playwright/test";
-import { cleanup, createTestProduct, getStock } from "./db";
-import { addToCart, checkout, signup, uniqueEmail } from "./helpers";
+import { test, expect , type Page } from "@playwright/test";
+import { cleanup, createTestProduct, getStock, resetLocalSignupLimit } from "./db";
+import { addToCart, checkout, signup, uniqueEmail , login} from "./helpers";
 
 test.afterAll(async () => {
   await cleanup();
@@ -86,4 +86,40 @@ test("logging out revokes the session even if the token was copied", async ({ br
 
   await ctx.close();
   await stolen.close();
+});
+
+test("logging out of other devices ends only the other sessions", async ({ browser }) => {
+  const baseURL = "http://localhost:3000";
+  const email = uniqueEmail();
+
+  const ctxA = await browser.newContext({ baseURL });
+  const pageA = await ctxA.newPage();
+  await signup(pageA, email);
+
+  const ctxB = await browser.newContext({ baseURL });
+  const pageB = await ctxB.newPage();
+  await login(pageB, email);
+
+  // checkout على عربة فاضية: 400 = مسجل دخول، 401 = لأ
+  const probe = (page: Page) =>
+    page.request.post("/api/checkout", {
+      headers: { "Idempotency-Key": crypto.randomUUID() },
+    });
+
+  expect((await probe(pageA)).status()).toBe(400);
+  expect((await probe(pageB)).status()).toBe(400);
+
+  await pageA.goto("/account");
+  await pageA.getByRole("button", { name: "تسجيل الخروج من الأجهزة الأخرى" }).click();
+  await expect(pageA.getByText("الأجهزة المسجّلة (1)")).toBeVisible();
+
+  await expect.poll(async () => (await probe(pageB)).status()).toBe(401);
+  expect((await probe(pageA)).status()).toBe(400); // جهاز A لسه شغال
+
+  await ctxA.close();
+  await ctxB.close();
+});
+
+test.beforeEach(async () => {
+  await resetLocalSignupLimit();
 });

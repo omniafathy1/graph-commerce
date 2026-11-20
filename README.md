@@ -10,7 +10,7 @@ A full-stack e-commerce app built with **Next.js 16**, **TypeScript** and a **gr
 
 - **Catalog:** category filters driven by the URL, product details, related products from graph relationships, and a quick-view modal (parallel + intercepting routes).
 - **Cart and checkout:** per-user cart stored in the database, optimistic updates with React Query, toast notifications with Zustand, and an atomic, idempotent checkout that checks and deducts stock, creates the order and snapshots unit prices.
-- **Authentication:** signup, login and logout with bcrypt-hashed passwords and a signed JWT in an httpOnly cookie and login rate limiting. Private routes are protected in `proxy.ts`.
+- **Authentication:** signup, login and logout with bcrypt-hashed passwords and a signed JWT in an httpOnly cookie and login rate limiting and account page to review and end active sessions. Private routes are protected in `proxy.ts`.
 - **Admin dashboard:** role-based authorization (the role is read from the database, not from the token) to add, edit and hide products with idempotent writes and optimistic locking, plus sales analytics (totals, top products, revenue by category).
 - **Performance:** Next.js Cache Components (`use cache`, `cacheTag`, `updateTag`), Suspense streaming, and loading, error and not-found boundaries.
 
@@ -130,6 +130,8 @@ A full-stack e-commerce app built with **Next.js 16**, **TypeScript** and a **gr
 - **Crawl rules:** `robots.ts` serves a real robots.txt that keeps the admin area, API and private pages out of search indexes. This is a hint for crawlers, not access control; authorization is enforced by the proxy and the server actions.
 - **Security headers:** the app sends nosniff, frame denial, a strict referrer policy and a restrictive permissions policy. A Content-Security-Policy is intentionally not enabled yet because a wrong policy can break Next.js hydration; it will be rolled out in report-only mode first.
 - **Server-side sessions:** each login creates a `Session` node and the JWT carries its id, which is checked on every request (deduplicated per request with `React.cache`). Logout deletes the session, so a copied token stops working immediately, and "log out everywhere" is possible. If the session lookup fails the user is treated as signed out (fail closed).
+- **Session management:** each session stores a truncated user agent so users can recognize their devices, and ending a session by id is scoped to the signed-in customer's own sessions, which prevents one user from ending another user's session (IDOR).
+- **Normalized emails:** addresses are trimmed and lowercased on signup and login so the same address cannot be registered twice with different casing.
 
 ## Known limitations and next steps
 

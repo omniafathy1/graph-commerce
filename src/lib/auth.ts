@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import jwt from "jsonwebtoken";
 import { runQuery } from "../lib/db";
 import { logger } from "./logger";
+import { toNum } from "./toNum";
 
 export const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
@@ -51,7 +52,7 @@ export const getCurrentUser = cache(async (): Promise<UserPayload | null> => {
   }
 });
 
-export async function createSession(customerId: string): Promise<string> {
+export async function createSession(customerId: string ,userAgent: string = ""): Promise<string> {
   const sid = crypto.randomUUID();
   const now = Date.now();
 
@@ -65,10 +66,10 @@ export async function createSession(customerId: string): Promise<string> {
 
   const records = await runQuery(
     `MATCH (c:Customer) WHERE elementId(c) = $customerId
-     CREATE (s:Session {id: $sid, createdAt: $now, expiresAt: $expiresAt})
+     CREATE (s:Session {id: $sid, createdAt: $now, expiresAt: $expiresAt ,userAgent: $userAgent})
      CREATE (c)-[:HAS_SESSION]->(s)
      RETURN s.id AS id`,
-    { customerId, sid, now, expiresAt: now + SESSION_TTL_MS }
+    { customerId, sid, now, expiresAt: now + SESSION_TTL_MS, userAgent: userAgent.slice(0, 200) }
   );
   if (records.length === 0) throw new Error("Customer not found");
 
@@ -100,6 +101,56 @@ export const getAdminUser = cache(async (): Promise<UserPayload | null> => {
 
   return records[0]?.get("role") === "admin" ? user : null;
 });
+
+export type SessionInfo = {
+  id: string;
+  createdAt: number;
+  expiresAt: number;
+  userAgent: string;
+};
+
+export async function listSessions(customerId: string): Promise<SessionInfo[]> {
+  const records = await runQuery(
+    `MATCH (c:Customer)-[:HAS_SESSION]->(s:Session)
+     WHERE elementId(c) = $customerId AND s.expiresAt > $now
+     RETURN s.id AS id, s.createdAt AS createdAt,
+            s.expiresAt AS expiresAt, s.userAgent AS userAgent
+     ORDER BY s.createdAt DESC`,
+    { customerId, now: Date.now() }
+  );
+
+  return records.map((r) => ({
+    id: r.get("id") as string,
+    createdAt: toNum(r.get("createdAt")),
+    expiresAt: toNum(r.get("expiresAt")),
+    userAgent: (r.get("userAgent") ?? "") as string,
+  }));
+}
+
+/** بيلغي جلسة بس لو بتاعت العميل ده (حماية من IDOR) */
+export async function revokeSessionForCustomer(
+  customerId: string,
+  sid: string
+): Promise<void> {
+  await runQuery(
+    `MATCH (c:Customer)-[:HAS_SESSION]->(s:Session {id: $sid})
+     WHERE elementId(c) = $customerId
+     DETACH DELETE s`,
+    { customerId, sid }
+  );
+}
+
+export async function revokeOtherSessions(
+  customerId: string,
+  keepSid: string
+): Promise<void> {
+  await runQuery(
+    `MATCH (c:Customer)-[:HAS_SESSION]->(s:Session)
+     WHERE elementId(c) = $customerId AND s.id <> $keepSid
+     DETACH DELETE s`,
+    { customerId, keepSid }
+  );
+}
 
 // للصفحات: لو مش أدمن نعرض 404 (منكشفش إن /admin موجود أصلاً)
 export async function requireAdmin() {

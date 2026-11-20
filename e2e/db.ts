@@ -73,6 +73,14 @@ export async function cleanup(): Promise<void> {
      WHERE a.key CONTAINS 'e2e-' AND a.key CONTAINS '@test.local'
      DETACH DELETE a`
   );
+  
+    await resetLocalSignupLimit();
+}
+/** بيصفّر عدّاد الـ signup للـ IP المحلي بس. الداتابيز مشتركة مع الإنتاج، فمنلمسش IPs حقيقية */
+export async function resetLocalSignupLimit(): Promise<void> {
   await run(
-    `MATCH (a:LoginAttempt) WHERE a.key STARTS WITH 'signup:' DETACH DELETE a`);
+    `MATCH (a:LoginAttempt)
+     WHERE a.key IN ['signup:ip:::1', 'signup:ip:127.0.0.1', 'signup:ip:unknown']
+     DETACH DELETE a`
+  );
 }

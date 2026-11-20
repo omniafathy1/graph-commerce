@@ -5,7 +5,7 @@ import jwt from "jsonwebtoken";
 import { cookies ,headers} from "next/headers";
 import { redirect } from "next/navigation";
 import { runQuery } from "../../lib/db";
-import { checkLimit, recordFailure, clearFailures } from "../../lib/rateLimit";
+import { checkLimit, recordFailure, clearFailures  } from "../../lib/rateLimit";
 import { logger } from "../../lib/logger";
 import {
   createSession,
@@ -14,11 +14,13 @@ import {
   revokeAllSessions,
   revokeSession,
 } from "../../lib/auth";
+import { normalizeEmail } from "@/src/lib/email";
 
 export type AuthState = { error?: string } | undefined;
 
 async function setSessionCookie(customerId: string, email: string) {
-  const sid = await createSession(customerId);
+  const h = await headers();
+  const sid = await createSession(customerId , h.get("user-agent") ?? "");
   const token = jwt.sign({ customerId, email, sid }, process.env.JWT_SECRET!, {
     expiresIn: "7d",
   });
@@ -36,7 +38,7 @@ export async function signupAction(
   formData: FormData
 ): Promise<AuthState> {
   const name = String(formData.get("name") ?? "").trim();
-  const email = String(formData.get("email") ?? "").trim();
+  const email = normalizeEmail(String(formData.get("email") ?? "").trim());
   const password = String(formData.get("password") ?? "");
 
   if (!name || !email || password.length < 6) {
@@ -95,7 +97,7 @@ export async function loginAction(
   prevState: AuthState,
   formData: FormData
 ): Promise<AuthState> {
-  const email = String(formData.get("email") ?? "").trim();
+  const email = normalizeEmail(String(formData.get("email") ?? "").trim());
   const password = String(formData.get("password") ?? "");
 
   if (!email || !password) {
@@ -105,7 +107,7 @@ export async function loginAction(
   // المفاتيح: الإيميل بحروف صغيرة عشان محدش يتحايل بتغيير الحالة
   const h = await headers();
   const ip = h.get("x-forwarded-for")?.split(",")[0].trim() ?? "unknown";
-  const emailKey = `login:email:${email.toLowerCase()}`;
+  const emailKey = `login:email:${email}`;
   const ipKey = `login:ip:${ip}`;
 
   // 1) هل محظور؟ (fail-open: لو الـ limiter نفسه وقع، منمنعش الـ login)

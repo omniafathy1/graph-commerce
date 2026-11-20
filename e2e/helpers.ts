@@ -13,6 +13,14 @@ export async function signup(page: Page, email: string) {
   await expect(page).toHaveURL("/");
 }
 
+export async function login(page: Page, email: string) {
+  await page.goto("/login");
+  await page.getByPlaceholder("الإيميل").fill(email);
+  await page.getByPlaceholder("الباسورد").fill("123456");
+  await page.getByRole("button", { name: "دخول", exact: true }).click();
+  await expect(page).toHaveURL("/");
+}
+
 /** يضيف منتج للعربة عن طريق الـ API (أسرع من الواجهة) */
 export async function addToCart(page: Page, productId: string, times = 1) {
   for (let i = 0; i < times; i++) {

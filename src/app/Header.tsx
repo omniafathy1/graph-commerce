@@ -34,6 +34,7 @@ export default function Header({
           </>
         ) : (
           <>
+            <Link href="/account" className="text-sm">حسابي</Link>
             <Link href="/login" className="text-sm">دخول</Link>
             <Link href="/signup" className="text-sm">حساب جديد</Link>
           </>
