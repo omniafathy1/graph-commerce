@@ -11,7 +11,7 @@ const securityHeaders = [
     key: "Permissions-Policy",
     value: "camera=(), microphone=(), geolocation=()",
   },
-  { key: "Content-Security-Policy-Report-Only", value: buildCsp({ isDev }) },
+  { key: "Content-Security-Policy-Report-Only", value: buildCsp({ isDev, enforce: true }) },
 ];
 const nextConfig: NextConfig = {
    cacheComponents: true,

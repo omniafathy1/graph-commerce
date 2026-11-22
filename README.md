@@ -132,6 +132,7 @@ A full-stack e-commerce app built with **Next.js 16**, **TypeScript** and a **gr
 - **Server-side sessions:** each login creates a `Session` node and the JWT carries its id, which is checked on every request (deduplicated per request with `React.cache`). Logout deletes the session, so a copied token stops working immediately, and "log out everywhere" is possible. If the session lookup fails the user is treated as signed out (fail closed).
 - **Session management:** each session stores a truncated user agent so users can recognize their devices, and ending a session by id is scoped to the signed-in customer's own sessions, which prevents one user from ending another user's session (IDOR).
 - **Normalized emails:** addresses are trimmed and lowercased on signup and login so the same address cannot be registered twice with different casing.
+- **Content-Security-Policy:** scripts, connections, forms and embedding are restricted to the same origin, and plugins and `<base>` injection are blocked. Inline scripts remain allowed because Cache Components (partial prerendering) is incompatible with nonce-based CSP, and Next.js hash-based SRI is still experimental. The policy was rolled out in report-only mode first.
 
 ## Known limitations and next steps
 
@@ -143,5 +144,5 @@ A full-stack e-commerce app built with **Next.js 16**, **TypeScript** and a **gr
 - Checkouts from two different tabs use different keys; a per-customer lock would close that gap.
 - Stock is deducted at checkout, so items in a cart are not reserved.
 - The login limiter uses a fixed window and trusts `x-forwarded-for`, so the per-IP limit can be bypassed; the per-email limit is the main protection.
-- No Content-Security-Policy yet.
+- The CSP allows `'unsafe-inline'` scripts, so it does not protect against injected inline XSS; a strict policy would require dynamic rendering.
 - Every authenticated request costs one extra database read; there is no rotation of short-lived tokens.
