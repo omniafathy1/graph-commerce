@@ -1,4 +1,7 @@
 import type { NextConfig } from "next";
+import { buildCsp } from "./src/lib/csp";
+
+const isDev = process.env.NODE_ENV === "development";
 
 const securityHeaders = [
   { key: "X-Content-Type-Options", value: "nosniff" },
@@ -8,6 +11,7 @@ const securityHeaders = [
     key: "Permissions-Policy",
     value: "camera=(), microphone=(), geolocation=()",
   },
+  { key: "Content-Security-Policy-Report-Only", value: buildCsp({ isDev }) },
 ];
 const nextConfig: NextConfig = {
    cacheComponents: true,
