@@ -5,6 +5,7 @@ import jwt from "jsonwebtoken";
 import { runQuery } from "../lib/db";
 import { logger } from "./logger";
 import { toNum } from "./toNum";
+import { connection } from "next/server";
 
 export const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
@@ -91,6 +92,7 @@ export async function revokeAllSessions(customerId: string): Promise<void> {
 
 // cache = لو اتنادت أكتر من مرة في نفس الطلب (layout + page)، الكويري تتنفذ مرة واحدة
 export const getAdminUser = cache(async (): Promise<UserPayload | null> => {
+  await connection();
   const user = await getCurrentUser();
   if (!user) return null;
 
