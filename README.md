@@ -14,6 +14,8 @@ A full-stack e-commerce app built with **Next.js 16**, **TypeScript** and a **gr
 - **Admin dashboard:** role-based authorization (the role is read from the database, not from the token) to add, edit and hide products with idempotent writes and optimistic locking, plus sales analytics (totals, top products, revenue by category).
 - **Performance:** Next.js Cache Components (`use cache`, `cacheTag`, `updateTag`), Suspense streaming, and loading, error and not-found boundaries.
 
+For the architecture diagram and the decision records behind this project, see [docs/architecture.md](docs/architecture.md).
+
 <p>
   <img src="docs/screenshots/product-modal.png" alt="Quick view modal" width="49%" />
   <img src="docs/screenshots/admin-stats.png" alt="Admin analytics" width="49%" />
