@@ -132,7 +132,7 @@ A full-stack e-commerce app built with **Next.js 16**, **TypeScript** and a **gr
 - **Server-side sessions:** each login creates a `Session` node and the JWT carries its id, which is checked on every request (deduplicated per request with `React.cache`). Logout deletes the session, so a copied token stops working immediately, and "log out everywhere" is possible. If the session lookup fails the user is treated as signed out (fail closed).
 - **Session management:** each session stores a truncated user agent so users can recognize their devices, and ending a session by id is scoped to the signed-in customer's own sessions, which prevents one user from ending another user's session (IDOR).
 - **Normalized emails:** addresses are trimmed and lowercased on signup and login so the same address cannot be registered twice with different casing.
-- **Content-Security-Policy:** scripts, connections, forms and embedding are restricted to the same origin, and plugins and `<base>` injection are blocked. Inline scripts remain allowed because Cache Components (partial prerendering) is incompatible with nonce-based CSP, and Next.js hash-based SRI is still experimental. The policy was rolled out in report-only mode first.
+- **Content-Security-Policy:** scripts, connections, forms and embedding are restricted to the same origin, and plugins and `<base>` injection are blocked. Inline scripts remain allowed because Cache Components (partial prerendering) is incompatible with nonce-based CSP, and Next.js hash-based SRI is still experimental. The policy is now active in enforcing mode.
 
 ## Known limitations and next steps
 
