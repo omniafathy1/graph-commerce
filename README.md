@@ -63,30 +63,10 @@ For the architecture diagram and the decision records behind this project, see [
    | `COGNO_USERNAME` / `COGNO_PASSWORD` | Database credentials |
    | `JWT_SECRET` | Long random string, e.g. `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"` |
 
-3. Create the initial data. Run each statement separately in your database console:
+3. Initialize the schema (unique constraints and two starter categories). It is safe to run repeatedly:
 
-   ```cypher
-   CREATE CONSTRAINT customer_email_unique IF NOT EXISTS
-   FOR (c:Customer) REQUIRE c.email IS UNIQUE
-   ```
-
-   ```cypher
-   CREATE CONSTRAINT order_idempotency_unique IF NOT EXISTS
-   FOR (o:Order) REQUIRE o.idempotencyKey IS UNIQUE
-   ```
-
-   ```cypher
-   CREATE CONSTRAINT product_idempotency_unique IF NOT EXISTS
-   FOR (p:Product) REQUIRE p.idempotencyKey IS UNIQUE
-   ```
-
-   ```cypher
-   CREATE (:Category {name: 'Electronics'}), (:Category {name: 'Clothing'})
-   ```
-   
-   ```cypher
-   CREATE CONSTRAINT session_id_unique IF NOT EXISTS
-   FOR (s:Session) REQUIRE s.id IS UNIQUE
+   ```bash
+   npm run db:init
    ```
 
 4. Start the app with `npm run dev` and open http://localhost:3000.
@@ -114,6 +94,7 @@ For the architecture diagram and the decision records behind this project, see [
 | `npm run lint` | Lint the code |
 | `npm test` | Run the unit tests |
 | `npm run test:e2e` | Run the Playwright end-to-end tests (writes and cleans up e2e- test data in the configured database) |
+| `npm run db:init` | Create the unique constraints and starter categories (idempotent) |
 
 ## Design decisions
 
